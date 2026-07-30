@@ -10,9 +10,8 @@ services:
         value: 10000
 
   # Frontend Static Site
-  - type: web
+  - type: static
     name: communiscore-ai-frontend
-    env: static
     rootDir: frontend
     buildCommand: npm run build
     publishDir: dist
