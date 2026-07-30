@@ -21,8 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install lightweight CPU-only PyTorch & Torchaudio to fit in Render Free Tier
-RUN pip install --no-cache-dir --prefer-binary torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+# Install matching lightweight CPU-only PyTorch & Torchaudio to prevent ABI mismatches
+RUN pip install --no-cache-dir torch==2.4.0 torchaudio==2.4.0 --index-url https://download.pytorch.org/whl/cpu
 
 # Copy requirements and install
 COPY backend/requirements.txt .
