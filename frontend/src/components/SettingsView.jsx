@@ -8,6 +8,7 @@ export default function SettingsView() {
   const [targetEyeContact, setTargetEyeContact] = useState(70);
   const [targetPosture, setTargetPosture] = useState(80);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [customBackendUrl, setCustomBackendUrl] = useState('');
 
   // Profile details
   const [profileName, setProfileName] = useState('Hackathon Presenter');
@@ -30,6 +31,9 @@ export default function SettingsView() {
     const savedPosture = localStorage.getItem('target_posture');
     if (savedPosture) setTargetPosture(Number(savedPosture));
 
+    const savedBackend = localStorage.getItem('custom_backend_url');
+    if (savedBackend) setCustomBackendUrl(savedBackend);
+
     // Profile details loading
     const savedName = localStorage.getItem('profile_name');
     if (savedName) setProfileName(savedName);
@@ -46,6 +50,7 @@ export default function SettingsView() {
     localStorage.setItem('gemini_api_key', apiKey);
     localStorage.setItem('target_eye_contact', String(targetEyeContact));
     localStorage.setItem('target_posture', String(targetPosture));
+    localStorage.setItem('custom_backend_url', customBackendUrl);
     localStorage.setItem('profile_name', profileName);
     localStorage.setItem('profile_role', profileRole);
     localStorage.setItem('profile_team', profileTeam);
@@ -59,12 +64,14 @@ export default function SettingsView() {
       localStorage.removeItem('gemini_api_key');
       localStorage.removeItem('target_eye_contact');
       localStorage.removeItem('target_posture');
+      localStorage.removeItem('custom_backend_url');
       localStorage.removeItem('profile_name');
       localStorage.removeItem('profile_role');
       localStorage.removeItem('profile_team');
       setApiKey('');
       setTargetEyeContact(70);
       setTargetPosture(80);
+      setCustomBackendUrl('');
       setProfileName('Hackathon Presenter');
       setProfileRole('Public Speaker');
       setProfileTeam('BehaviorIQ Dev Team');
@@ -237,6 +244,31 @@ export default function SettingsView() {
             </div>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
               Using default Hackathon key.
+            </span>
+          </div>
+
+          {/* Custom Backend URL */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+            <label style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>
+              Backend API Endpoint URL
+            </label>
+            <input 
+              type="text"
+              value={customBackendUrl}
+              onChange={(e) => setCustomBackendUrl(e.target.value)}
+              placeholder="e.g. http://localhost:8000"
+              style={{
+                background: '#020617',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+                padding: '10px 14px',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontFamily: 'var(--font-mono)'
+              }}
+            />
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+              Leave blank to use the default live URL. You can paste a local address (e.g. http://localhost:8000) or a localtunnel URL to run calculations locally.
             </span>
           </div>
 

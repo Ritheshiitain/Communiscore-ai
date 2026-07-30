@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || (window.location.origin.includes('localhost') ? 'http://localhost:8000' : '');
+function getApiBase() {
+  return localStorage.getItem('custom_backend_url') || import.meta.env.VITE_API_URL || (window.location.origin.includes('localhost') ? 'http://localhost:8000' : '');
+}
 
 async function handleResponse(res, context) {
   if (!res.ok) {
@@ -9,7 +11,7 @@ async function handleResponse(res, context) {
 }
 
 export async function predictEmotion(imageBase64) {
-  const res = await fetch(`${API_BASE}/predict-emotion`, {
+  const res = await fetch(`${getApiBase()}/predict-emotion`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: imageBase64 }),
@@ -18,7 +20,7 @@ export async function predictEmotion(imageBase64) {
 }
 
 export async function predictGaze(imageBase64) {
-  const res = await fetch(`${API_BASE}/predict-gaze`, {
+  const res = await fetch(`${getApiBase()}/predict-gaze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: imageBase64 }),
@@ -27,7 +29,7 @@ export async function predictGaze(imageBase64) {
 }
 
 export async function predictPosture(imageBase64) {
-  const res = await fetch(`${API_BASE}/predict-posture`, {
+  const res = await fetch(`${getApiBase()}/predict-posture`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: imageBase64 }),
@@ -38,7 +40,7 @@ export async function predictPosture(imageBase64) {
 export async function predictVoice(audioBlob, filename = 'chunk.webm') {
   const formData = new FormData();
   formData.append('audio', audioBlob, filename);
-  const res = await fetch(`${API_BASE}/predict-voice`, {
+  const res = await fetch(`${getApiBase()}/predict-voice`, {
     method: 'POST',
     body: formData,
   });
@@ -47,7 +49,7 @@ export async function predictVoice(audioBlob, filename = 'chunk.webm') {
 
 export async function predictAiImage(imageBase64) {
   const apiKey = localStorage.getItem('gemini_api_key') || '';
-  const res = await fetch(`${API_BASE}/predict-ai-image`, {
+  const res = await fetch(`${getApiBase()}/predict-ai-image`, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
@@ -62,7 +64,7 @@ export async function checkHealth() {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${API_BASE}/health`, { signal: controller.signal });
+    const res = await fetch(`${getApiBase()}/health`, { signal: controller.signal });
     clearTimeout(timeoutId);
     return res.ok;
   } catch (err) {
@@ -70,3 +72,4 @@ export async function checkHealth() {
     return false;
   }
 }
+
