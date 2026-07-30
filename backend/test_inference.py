@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 import time
 from services.emotion_service import predict_emotion, _get_models as load_emotion
-from services.gaze_service import predict_gaze, _get_landmarker as load_gaze
+from services.gaze_service import predict_gaze, _get_models as load_gaze
 from services.posture_service import predict_posture, _get_pose as load_posture
 
 print("Generating dummy image...")
