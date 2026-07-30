@@ -1,9 +1,12 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 import numpy as np
 from fastapi import FastAPI, File, UploadFile, Header
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from services.emotion_service import predict_emotion
@@ -92,3 +95,16 @@ async def predict_ai_image_endpoint(body: AIFrameRequest, x_gemini_key: str = He
     # Run the external network call to Gemini without blocking local inference
     res = analyze_image_with_gemini(body.image, x_gemini_key)
     return res
+
+
+# Serve React Frontend static assets if built
+if os.path.exists("./static"):
+    app.mount("/assets", StaticFiles(directory="./static/assets"), name="assets")
+
+    @app.get("/{catchall:path}")
+    async def serve_frontend(catchall: str):
+        # Allow API endpoints to fall through
+        if catchall.startswith("predict-") or catchall == "health" or catchall == "docs" or catchall == "openapi.json":
+            return None
+        return FileResponse("./static/index.html")
+

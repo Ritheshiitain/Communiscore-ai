@@ -1,24 +1,10 @@
 services:
-  # Backend Web Service
+  # Full-stack Unified Web Service
   - type: web
-    name: communiscore-ai-backend
+    name: communiscore-ai
     env: docker
     dockerfilePath: ./backend/Dockerfile
     plan: free
     envVars:
       - key: PORT
-        value: 10000
-
-  # Frontend Static Site
-  - type: web
-    name: communiscore-ai-frontend
-    env: static
-    rootDir: frontend
-    buildCommand: npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: communiscore-ai-backend
-          property: host
+        value: 8000
