@@ -31,16 +31,9 @@ inference_lock = asyncio.Lock()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Warm up models on startup so first request is fast
-    load_emotion()
-    load_gaze()
-    try:
-        _pose = _get_pose()
-        dummy = np.zeros((480, 640, 3), dtype=np.uint8)
-        predict_posture(dummy)
-    except FileNotFoundError as e:
-        print(f"[WARN] Pose model warmup skipped: {e}")
+    # Lazy load models to keep startup RAM usage under 512MB
     yield
+
 
 
 app = FastAPI(title="BehaviorIQ API", lifespan=lifespan)
