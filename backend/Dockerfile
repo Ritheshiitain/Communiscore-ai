@@ -9,10 +9,14 @@ RUN npm run build
 # Stage 2: Build FastAPI Backend
 FROM python:3.10-slim
 
-# Install system dependencies for OpenCV and audio processing
+# Install system dependencies for OpenCV, X11, and audio processing
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     libsndfile1 \
+    libgl1 \
+    libxcb1 \
+    libxrender1 \
+    libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
