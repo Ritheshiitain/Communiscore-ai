@@ -10,11 +10,12 @@ services:
         value: 10000
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: communiscore-ai-frontend
+    env: static
     rootDir: frontend
     buildCommand: npm run build
-    publishDir: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
