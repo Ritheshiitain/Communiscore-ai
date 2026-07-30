@@ -1,0 +1,24 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: communiscore-ai-backend
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    envVars:
+      - key: PORT
+        value: 10000
+
+  # Frontend Static Site
+  - type: web
+    name: communiscore-ai-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: communiscore-ai-backend
+          property: host
