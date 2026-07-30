@@ -13,7 +13,10 @@ async function handleResponse(res, context) {
 export async function predictEmotion(imageBase64) {
   const res = await fetch(`${getApiBase()}/predict-emotion`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'bypass-tunnel-reminder': 'true'
+    },
     body: JSON.stringify({ image: imageBase64 }),
   });
   return handleResponse(res, 'emotion');
@@ -22,7 +25,10 @@ export async function predictEmotion(imageBase64) {
 export async function predictGaze(imageBase64) {
   const res = await fetch(`${getApiBase()}/predict-gaze`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'bypass-tunnel-reminder': 'true'
+    },
     body: JSON.stringify({ image: imageBase64 }),
   });
   return handleResponse(res, 'gaze');
@@ -31,7 +37,10 @@ export async function predictGaze(imageBase64) {
 export async function predictPosture(imageBase64) {
   const res = await fetch(`${getApiBase()}/predict-posture`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'bypass-tunnel-reminder': 'true'
+    },
     body: JSON.stringify({ image: imageBase64 }),
   });
   return handleResponse(res, 'posture');
@@ -42,6 +51,9 @@ export async function predictVoice(audioBlob, filename = 'chunk.webm') {
   formData.append('audio', audioBlob, filename);
   const res = await fetch(`${getApiBase()}/predict-voice`, {
     method: 'POST',
+    headers: {
+      'bypass-tunnel-reminder': 'true'
+    },
     body: formData,
   });
   return handleResponse(res, 'voice');
@@ -53,7 +65,8 @@ export async function predictAiImage(imageBase64) {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
-      'X-Gemini-Key': apiKey
+      'X-Gemini-Key': apiKey,
+      'bypass-tunnel-reminder': 'true'
     },
     body: JSON.stringify({ image: imageBase64 }),
   });
@@ -64,7 +77,12 @@ export async function checkHealth() {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${getApiBase()}/health`, { signal: controller.signal });
+    const res = await fetch(`${getApiBase()}/health`, { 
+      signal: controller.signal,
+      headers: {
+        'bypass-tunnel-reminder': 'true'
+      }
+    });
     clearTimeout(timeoutId);
     return res.ok;
   } catch (err) {
@@ -72,4 +90,5 @@ export async function checkHealth() {
     return false;
   }
 }
+
 
