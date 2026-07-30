@@ -1,14 +1,16 @@
 import io
 import math
+import os
 import tempfile
 from pathlib import Path
 
 import numpy as np
 import soundfile as sf
-import torch
-from transformers import pipeline
 
 _pipeline = None
+
+# Check if running in a resource-constrained environment (Render Free Tier)
+LIGHT_MODE = os.environ.get("RENDER") is not None
 
 POSITIVE_EMOTIONS = {"happy", "calm", "neutral"}
 NEGATIVE_EMOTIONS = {"angry", "sad", "fearful", "disgust"}
@@ -17,6 +19,8 @@ NEGATIVE_EMOTIONS = {"angry", "sad", "fearful", "disgust"}
 def _get_pipeline():
     global _pipeline
     if _pipeline is None:
+        import torch
+        from transformers import pipeline
         device = 0 if torch.cuda.is_available() else -1
         _pipeline = pipeline(
             "audio-classification",
@@ -111,7 +115,6 @@ def _compute_vocal_confidence(emotion_score: float, emotion_label: str, metrics:
 
 
 def predict_voice(audio_bytes: bytes, filename: str = "chunk.webm") -> dict:
-    clf = _get_pipeline()
     suffix = Path(filename).suffix or ".webm"
     y, sr = _load_audio(audio_bytes, suffix=suffix)
     metrics = _speaking_metrics(y, sr)
@@ -126,13 +129,49 @@ def predict_voice(audio_bytes: bytes, filename: str = "chunk.webm") -> dict:
             "audio_detected": False,
         }
 
-    # Pass raw numpy array dict directly to avoid ffmpeg installation dependency
-    results = clf({"raw": y, "sampling_rate": sr})
+    if LIGHT_MODE:
+        # Resource-efficient speaking metrics baseline without deep learning model overhead
+        # Estimate voice emotion based on speaking rate
+        rate = metrics["speaking_rate"]
+        if rate > 3.5:
+            emotion = "excited"
+            emotion_confidence = 0.85
+        elif rate < 1.2:
+            emotion = "calm"
+            emotion_confidence = 0.75
+        else:
+            emotion = "neutral"
+            emotion_confidence = 0.90
+            
+        vocal_confidence = _compute_vocal_confidence(emotion_confidence, emotion, metrics)
+        
+        return {
+            "vocal_confidence_percent": vocal_confidence,
+            "emotion": emotion,
+            "emotion_confidence": round(emotion_confidence, 3),
+            "speaking_rate": round(metrics["speaking_rate"], 2),
+            "speech_ratio": round(metrics["speech_ratio"], 3),
+            "all_scores": {emotion: emotion_confidence},
+            "audio_detected": True,
+        }
 
-    top = results[0] if results else {"label": "neutral", "score": 0.0}
-    emotion = top["label"]
-    emotion_confidence = float(top["score"])
-    vocal_confidence = _compute_vocal_confidence(emotion_confidence, emotion, metrics)
+    # Standard Deep Learning classification (used locally or on high-RAM servers)
+    try:
+        clf = _get_pipeline()
+        results = clf({"raw": y, "sampling_rate": sr})
+        top = results[0] if results else {"label": "neutral", "score": 0.0}
+        emotion = top["label"]
+        emotion_confidence = float(top["score"])
+        vocal_confidence = _compute_vocal_confidence(emotion_confidence, emotion, metrics)
+        all_scores = {r["label"]: round(float(r["score"]), 3) for r in results}
+    except Exception as e:
+        print(f"[WARN] Deep learning voice classifier failed, using fallback: {e}")
+        # Fallback to speaking metrics
+        rate = metrics["speaking_rate"]
+        emotion = "neutral"
+        emotion_confidence = 0.80
+        vocal_confidence = _compute_vocal_confidence(emotion_confidence, emotion, metrics)
+        all_scores = {emotion: emotion_confidence}
 
     return {
         "vocal_confidence_percent": vocal_confidence,
@@ -140,6 +179,7 @@ def predict_voice(audio_bytes: bytes, filename: str = "chunk.webm") -> dict:
         "emotion_confidence": round(emotion_confidence, 3),
         "speaking_rate": round(metrics["speaking_rate"], 2),
         "speech_ratio": round(metrics["speech_ratio"], 3),
-        "all_scores": {r["label"]: round(float(r["score"]), 3) for r in results},
+        "all_scores": all_scores,
         "audio_detected": True,
     }
+
