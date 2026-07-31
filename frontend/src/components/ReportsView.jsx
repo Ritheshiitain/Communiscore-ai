@@ -68,22 +68,25 @@ const MOCK_REPORTS = [
   }
 ];
 
-export default function ReportsView() {
-  const [selectedReport, setSelectedReport] = useState(MOCK_REPORTS[0]);
+export default function ReportsView({ reports = MOCK_REPORTS, selectedReportId, onSelectReport }) {
+  const activeReportId = selectedReportId || (reports.length > 0 ? reports[0].id : MOCK_REPORTS[0].id);
+  const selectedReport = reports.find((r) => r.id === activeReportId) || reports[0] || MOCK_REPORTS[0];
 
   return (
     <div className="reports-view" style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px', marginTop: '20px' }}>
       
       {/* Session History List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <p style={{ fontSize: '11px', fontWeight: '700', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-          Assessment History
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <p style={{ fontSize: '11px', fontWeight: '700', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Assessment History ({reports.length})
+          </p>
+        </div>
 
-        {MOCK_REPORTS.map((report) => (
+        {reports.map((report) => (
           <div 
             key={report.id}
-            onClick={() => setSelectedReport(report)}
+            onClick={() => onSelectReport ? onSelectReport(report.id) : null}
             style={{
               padding: '16px',
               borderRadius: '12px',
@@ -110,7 +113,7 @@ export default function ReportsView() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
               <span>📅 {report.date}</span>
-              <span>⏱ {report.duration} mins</span>
+              <span>⏱ {report.duration}</span>
             </div>
           </div>
         ))}
@@ -126,7 +129,7 @@ export default function ReportsView() {
               {selectedReport.title}
             </h2>
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-              Completed on {selectedReport.date} • Duration: {selectedReport.duration} minutes
+              Completed on {selectedReport.date} • Duration: {selectedReport.duration}
             </p>
           </div>
 
@@ -135,7 +138,7 @@ export default function ReportsView() {
             <span style={{ 
               fontSize: '2rem', 
               fontWeight: '800', 
-              color: 'var(--text-primary)',
+              color: selectedReport.overallScore >= 80 ? 'var(--green)' : selectedReport.overallScore >= 70 ? 'var(--amber)' : '#f87171',
               background: 'rgba(255,255,255,0.03)',
               padding: '6px 16px',
               borderRadius: '10px',
@@ -169,31 +172,42 @@ export default function ReportsView() {
         {/* Selected session chart */}
         <div>
           <p style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '14px', fontFamily: 'var(--font-mono)' }}>
-            📊 Multi-Metric Timeline Progression
+            📊 Multi-Metric Timeline Progression (Recorded Session)
           </p>
           <div style={{ height: '220px', width: '100%' }}>
             <TimelineChart data={selectedReport.timeline} />
           </div>
         </div>
 
-        {/* Coach Recommendations */}
+        {/* Coach Recommendations & Actionable Insights */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-          <p style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '12px' }}>
-            💡 AI Coach Stance & Voice Breakdown
+          <p style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>💡 AI Behavioral Breakdown — Strengths & What to Improve</span>
           </p>
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {selectedReport.tips.map((tip, idx) => (
-              <li key={idx} style={{ 
-                fontSize: '13px', 
-                color: 'var(--text-secondary)', 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '8px' 
-              }}>
-                <span style={{ color: 'var(--teal)' }}>✦</span>
-                <span>{tip}</span>
-              </li>
-            ))}
+          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {selectedReport.tips.map((tip, idx) => {
+              const isPositive = tip.includes('✅') || tip.includes('✨') || tip.includes('Outstanding') || tip.includes('Excellent');
+              const isWarning = tip.includes('⚠️') || tip.includes('Improve') || tip.includes('Needs Improvement');
+              return (
+                <li key={idx} style={{ 
+                  fontSize: '13px', 
+                  color: 'var(--text-primary)', 
+                  display: 'flex', 
+                  alignItems: 'flex-start', 
+                  gap: '10px',
+                  background: isPositive ? 'rgba(34, 197, 94, 0.06)' : isWarning ? 'rgba(239, 68, 68, 0.06)' : 'rgba(99, 102, 241, 0.06)',
+                  borderLeft: `4px solid ${isPositive ? 'var(--green)' : isWarning ? '#f87171' : 'var(--indigo)'}`,
+                  padding: '12px 16px',
+                  borderRadius: '6px',
+                  borderTop: '1px solid rgba(255,255,255,0.05)',
+                  borderRight: '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  lineHeight: '1.5'
+                }}>
+                  <span>{tip}</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -202,3 +216,4 @@ export default function ReportsView() {
     </div>
   );
 }
+
